@@ -1,0 +1,77 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @updatedAt @map(name: "updated_at")
+
+  profile Profile?
+  Post    Post[]
+  Comment Comment[]
+  @@map(name: "users")
+}
+
+model Profile {
+  id           Int     @id @default(autoincrement())
+  firstName    String  @map(name: "first_name")
+  lastName     String  @map(name: "last_name")
+  address      String?
+  addressCity  String? @map(name: "address_city")
+  addressState String? @map(name: "address_state")
+  zipCode      String? @map(name: "zip_code")
+  phoneNumber  String? @map(name: "phone_number")
+  user         User    @relation(fields: [userId], references: [id])
+  userId       String  @map(name: "user_id")
+
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @updatedAt @map(name: "updated_at")
+
+  @@index([userId], name: "profile.user_id")
+  @@map(name: "profile")
+}
+
+model Post {
+  id     String @id @default(cuid())
+  post   String
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @map(name: "user_id")
+
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @updatedAt @map(name: "updated_at")
+
+
+  UserTeam Comment[]
+  @@index([userId], name: "posts.user_id")
+  @@map(name: "teams")
+}
+
+model Comment {
+  id      Int    @id @default(autoincrement())
+  user    User   @relation(fields: [userId], references: [id])
+  userId  String @map(name: "user_id")
+  post    Post   @relation(fields: [postId], references: [id])
+  postId  String @map(name: "post_id")
+  comment String
+
+  createdAt DateTime @default(now()) @map(name: "created_at")
+  updatedAt DateTime @updatedAt @map(name: "updated_at")
+
+  @@index([userId], name: "comments.user_id")
+  @@index([postId], name: "comments.post_id")
+  @@map(name: "comments")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
